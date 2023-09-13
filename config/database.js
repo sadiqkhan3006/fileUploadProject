@@ -6,7 +6,9 @@ exports.dbconnect = async () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     })
-    .then(console.log("Db connected successfully"))
+    .then(() => {
+      console.log("Db connected successfully");
+    })
     .catch((err) => {
       console.log(err.message);
       console.log("Error while connecting to db..");
