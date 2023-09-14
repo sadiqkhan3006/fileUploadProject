@@ -1,4 +1,6 @@
 const file = require("../models/file");
+const cloudinary = require("cloudinary").v2;
+const File = require("../models/file");
 //local file upload ///
 
 exports.localFileUpload = async (req, res) => {
@@ -31,6 +33,51 @@ exports.localFileUpload = async (req, res) => {
     res.json({
       success: false,
       message: "Error while upploading the file",
+    });
+  }
+};
+async function uploadToCloudinary(file, folder) {
+  const options = { folder };
+  return await cloudinary.uploader.upload(file.tempFilePath, options);
+}
+exports.imageUpload = async (req, res) => {
+  try {
+    //data fetch//
+    const { name, tags, email } = req.body;
+    console.log(req.body);
+    const file = req.files.imageFile; //image file is name of our image
+    console.log("image dekhlo: ", file);
+    //validations //
+    const supportedTypes = ["jpeg", "jpg", "png"];
+    let arr = file.name.split(".");
+    const fileType = arr[arr.length - 1].toLowerCase();
+    console.log(fileType);
+    if (!supportedTypes.includes(fileType)) {
+      return res.status(400).json({
+        success: false,
+        message: "File format not supported",
+      });
+    }
+    //file format supported hai toh cludinary pe upload karde
+    const response = await uploadToCloudinary(file, "codehelp");
+    console.log("Clodinary response: ", response);
+    //save entry in db
+    const fileData = await File.create({
+      name,
+      tags,
+      email,
+      imageUrl: response.secure_url,
+    });
+    res.json({
+      success: true,
+      Url: response.secure_url,
+      message: "Image uploaded Successfully",
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.json({
+      success: false,
+      message: "Error while upploading the image to cloudinary",
     });
   }
 };
